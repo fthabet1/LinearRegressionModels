@@ -5,7 +5,7 @@ colorFrom: indigo
 colorTo: blue
 sdk: streamlit
 sdk_version: "1.32.2"
-app_file: app_fixed.py
+app_file: app.py
 pinned: false
 ---
 
@@ -35,20 +35,16 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-### On Hugging Face Spaces
-If you're deploying this on Hugging Face Spaces, use the fixed version of the app:
+### Deployment Notes
 
-```bash
-streamlit run app_fixed.py
-```
+For deployment on Hugging Face Spaces, the app.py file has been modified to include all necessary model code directly in the file, avoiding any import issues that may occur in the Hugging Face Spaces environment. This monolithic approach ensures the application runs smoothly regardless of Python path configurations.
 
-The `app_fixed.py` file contains special import handling to work around import issues on Hugging Face Spaces.
+The `app.py` file is completely self-contained and does not rely on imports from the LinearRegression package, making it robust for deployment in constrained environments.
 
 ## Project Structure
 
-- `app.py`: Main application file
-- `app_fixed.py`: Version optimized for Hugging Face Spaces
-- `LinearRegression/`: Package containing model implementations
+- `app.py`: Self-contained application with all model classes defined internally
+- `LinearRegression/`: Original package containing model implementations (used for local development/extension)
   - `models/`: Linear regression model implementations
   - `preprocessing/`: Data preprocessing utilities
   - `optimizers/`: Optimization algorithms

@@ -97,107 +97,6 @@ class BaseModel(ABC):
         # In practice, it's usually capped at 0
         return max(0.0, r2) if not np.isnan(r2) else 0.0
     
-
-    def adjustedR2(self, X, y):
-        """
-        Calculate the adjusted R^2 for the model.
-
-        Parameters:
-        -----------
-        X: Array of test data (N x M array of N samples and M features)
-        y: Array of actual values (N samples)
-
-        Returns:
-        --------
-        score: float, adjusted R^2 score
-        """
-        r2 = self.score(X, y)
-        n = X.shape[0]
-        p = X.shape[1]
-        
-        adjusted_r2 = 1 - (1 - r2) * (n - 1) / (n - p - 1)
-        
-        return adjusted_r2
-
-    def crossValidation(self, X, y, k=5):
-        """
-        Perform k-fold cross-validation on the model.
-
-        Parameters:
-        -----------
-        X: Array or DataFrame of data (N x M array of N samples and M features)
-        y: Array or Series of target values (N samples)
-        k: Number of folds
-
-        Returns:
-        --------
-        scores: Array of R^2 scores for each fold
-        """
-        print(f"Starting {k}-fold cross-validation...")
-        
-        is_pandas_X = isinstance(X, pd.DataFrame) or isinstance(X, pd.Series)
-        is_pandas_y = isinstance(y, pd.DataFrame) or isinstance(y, pd.Series)
-        
-        X_copy, y_copy = self.validateData(X, y)
-        
-        n = X_copy.shape[0]
-        
-        # Create random indices for shuffling
-        indices = np.random.permutation(n)
-        
-        foldSize = n // k
-        foldIndices = [indices[i * foldSize:(i + 1) * foldSize] for i in range(k)]
-        
-        if n % k != 0:
-            foldIndices[-1] = np.concatenate([foldIndices[-1], indices[k * foldSize:]])
-        
-        scores = []
-        prevWeights = None
-        prevBias = None
-        
-        for i in range(k):
-            
-            testIndex = foldIndices[i]            
-            trainIndex = np.concatenate([foldIndices[j] for j in range(k) if j != i])
-            
-            
-            if is_pandas_X:
-                X_train = X.iloc[trainIndex] if isinstance(X, pd.DataFrame) else X.loc[trainIndex]
-                X_test = X.iloc[testIndex] if isinstance(X, pd.DataFrame) else X.loc[testIndex]
-            else:
-                X_train = X_copy[trainIndex]
-                X_test = X_copy[testIndex]
-                
-            if is_pandas_y:
-                y_train = y.iloc[trainIndex] if isinstance(y, pd.DataFrame) else y.loc[trainIndex]
-                y_test = y.iloc[testIndex] if isinstance(y, pd.DataFrame) else y.loc[testIndex]
-            else:
-                y_train = y_copy[trainIndex]
-                y_test = y_copy[testIndex]
-            
-            # Create a new instance of the same model class
-            if hasattr(self, 'optimizer') and hasattr(self, 'normalize'):
-                modelCopy = self.__class__(
-                    max_iterations=self.optimizer.getMaxIterations() if hasattr(self.optimizer, 'getMaxIterations') else 1000,
-                    normalize=self.normalize
-                )
-            else:
-                modelCopy = self.__class__()
-            
-            if prevWeights is not None and prevBias is not None:
-                modelCopy.setParams(weights=prevWeights, bias=prevBias)
-
-
-            modelCopy.fit(X_train, y_train)
-            prevWeights = modelCopy.getWeights()
-            prevBias = modelCopy.getBias()
-            
-            score = modelCopy.score(X_test, y_test)
-
-            scores.append(score)
-        
-        return scores
-    
     def validateData(self, X, y=None):
         """
         Validate and convert input data to proper numpy arrays.
@@ -255,4 +154,4 @@ class BaseModel(ABC):
             if np.isinf(y).any():
                 raise ValueError("y contains infinite values")
 
-        return X, y if y is not None else None
+        return X, y if y is not None else None 
