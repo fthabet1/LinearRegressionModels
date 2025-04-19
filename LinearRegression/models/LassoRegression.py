@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from LinearRegression.models.MultivariateLinearModel import MultivariateLinearModel
-from ..optimizers.CoordinateDescent import CoordinateDescent
+from LinearRegression.optimizers.CoordinateDescent import CoordinateDescent
 
 class LassoRegression(MultivariateLinearModel):
 

@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
-from .BaseModel import BaseModel
-from ..optimizers.GradientDescent import GradientDescent
-from ..preprocessing.Normalization import FeatureNormalizer
+from LinearRegression.models.BaseModel import BaseModel
+from LinearRegression.optimizers.GradientDescent import GradientDescent
+from LinearRegression.preprocessing.Normalization import FeatureNormalizer
 
 class UnivariateLinearModel(BaseModel):
 
