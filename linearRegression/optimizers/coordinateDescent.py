@@ -70,53 +70,71 @@ class CoordinateDescent:
         nSamples = X.shape[0]
         mFeatures = X.shape[1]
         
-        # Clip very large values to prevent numerical issues
         theta = np.zeros(mFeatures)
-        yPred = np.zeros(nSamples)
-
         bias = np.mean(y)
-        yPred = np.dot(X, theta) + bias
+        yPred = np.ones(nSamples) * bias
+
+        corrWithTarget = np.abs(X.T @ (y - bias)) / nSamples
+        featureOrder = np.argsort(-corrWithTarget)
 
         cost = self.computeCost(X, y, theta, bias)
         costHistory.append(cost)
         
         costIncreases = 0
+        activeSet = set()
 
         for i in range(self.maxIterations):
             thetaOld = theta.copy()
+            maxChange = 0
 
-            # Loop through each feature and update it
-            for j in range(mFeatures):
-                # Store old parameter value
-                thetaJOld = theta[j]
+            activeFeatures = list(activeSet)
+            if activeFeatures:
+                for j in activeFeatures:
+                    oldVal = theta[j]
+                    theta[j] = self.computeCoordinate(X, y, theta, j, yPred)
+
+                    if theta[j] != oldVal:
+                        yPred += X[:, j] * (theta[j] - oldVal)
+                        maxChange = max(maxChange, abs(theta[j] - oldVal))
+
+                    if theta[j] != 0 and j not in activeSet:
+                        activeSet.add(j)
+                    elif theta[j] == 0 and j in activeSet:
+                        activeSet.remove(j)
+
+            if i % 5 == 0 or not activeFeatures:
+                for j in featureOrder:
+                    if j not in activeSet:
+                        oldVal = theta[j]
+                        theta[j] = self.computeCoordinate(X, y, theta, j, yPred)
+
+                        if theta[j] != oldVal:
+                            yPred += X[:, j] * (theta[j] - oldVal)
+                            maxChange = max(maxChange, abs(theta[j] - oldVal))
+
+                        if theta[j] != 0:
+                            activeSet.add(j)
             
-                theta[j] = self.computeCoordinate(X, y, theta, j, yPred)
-                
-                # Update predictions if the parameter changed
-                if theta[j] != thetaJOld:
-                    # Update predictions incrementally
-                    yPred -= X[:, j] * thetaJOld
-                    yPred += X[:, j] * theta[j]
-            
+
             newCost = self.computeCost(X, y, theta, bias)
             costHistory.append(newCost)
-            
+
             if newCost > cost:
                 costIncreases += 1
                 if costIncreases >= 5:
                     if self.verbose:
-                        print(f"Cost increased {costIncreases} times. Exiting...")
+                        print(f"Cost increased for {costIncreases} consecutive iterations. Stopping optimization.")
                     break
             else:
                 costIncreases = 0
-        
-            # Check for convergence - either by cost improvement or parameter change
+
             if self.checkConvergence(cost, newCost, theta, thetaOld):
                 if self.verbose:
-                    print(f"Converged in {i+1} iterations")
+                    print(f"Converged after {i + 1} iterations")
                 break
 
             cost = newCost
+
 
         return theta, bias, costHistory
 
@@ -139,32 +157,24 @@ class CoordinateDescent:
         """
         N = X.shape[0]
     
-        # Get the j-th feature vector
         xj = X[:, j]
+
+        squaredSumXJ = np.sum(xj * xj)
+        if squaredSumXJ == 0:
+            return 0.0
         
-        # Current value of parameter j
         thetaJOld = params[j]
+        residuals = y - predictions + xj * thetaJOld
         
-        if predictions is not None:
-            residuals = y - predictions
-            partialResiduals = residuals + xj * thetaJOld
-        else:
-            paramsWithoutJ = params.copy()
-            paramsWithoutJ[j] = 0
-            predsWithoutJ = np.dot(X, paramsWithoutJ)
-            
-            partialResiduals = y - predsWithoutJ
         
         # Calculate correlation of feature j with partial residuals
-        rho = np.dot(xj, partialResiduals) / N
+        rho = np.dot(xj, residuals) / N
         
-        # Apply soft thresholding
-        if rho < -self.lambda_ / N:
-            newParam = rho + self.lambda_ / N
-        elif rho > self.lambda_ / N:
-            newParam = rho - self.lambda_ / N
-        else:
+        threshold = self.lambda_ / N
+        if abs(rho) <= threshold:
             newParam = 0.0
+        else:
+            newParam = (rho - np.sign(rho) * threshold) / (squaredSumXJ / N)
             
         return newParam
 
@@ -185,9 +195,10 @@ class CoordinateDescent:
         """
         try:
             N = X.shape[0]
-            predictions = np.dot(X, theta) + bias
-            residuals = y - predictions
-            cost = (1/(2*N)) * np.sum(residuals**2) + (self.lambda_/N) * np.sum(np.abs(theta))
+            predictions = y - (X @ theta + bias)
+            mse = np.sum(predictions ** 2) / (2 * N)
+            l1Penalty = self.lambda_ * np.sum(np.abs(theta)) / N
+            cost = mse + l1Penalty
             return cost
         except Exception as e:
             print(f"Error in computeCost: {e}")
@@ -211,16 +222,16 @@ class CoordinateDescent:
         """
         # Check relative improvement in objective
         if oldCost == 0:
-            obj_improvement = abs(newCost)
+            objImprovement = abs(newCost)
         else:
-            obj_improvement = abs((newCost - oldCost) / oldCost)
+            objImprovement = abs((newCost - oldCost) / oldCost)
         
         # Check parameter changes
-        param_change = np.max(np.abs(theta - thetaOld))
+        paramChange = np.max(np.abs(theta - thetaOld))
         
         # Convergence criteria:
         # 1. Objective improvement is small
         # 2. Parameter changes are small
         # 4. Minimum improvement threshold is met
-        return (obj_improvement < self.tolerance and 
-                param_change < self.tolerance)
+        return (objImprovement < self.tolerance and 
+                paramChange < self.tolerance)
