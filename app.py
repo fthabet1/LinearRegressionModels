@@ -10,12 +10,12 @@ import seaborn as sns
 # Add the project root directory to sys.path to import modules
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from LinearRegression.models.UnivariateLinearModel import UnivariateLinearModel
-from LinearRegression.models.MultivariateLinearModel import MultivariateLinearModel
-from LinearRegression.models.RidgeRegression import RidgeRegression
-from LinearRegression.models.LassoRegression import LassoRegression
-from LinearRegression.preprocessing.Normalization import FeatureNormalizer
-from LinearRegression.preprocessing.DataSplitter import trainTestSplitData
+from LinearRegression.models import UnivariateLinearModel
+from LinearRegression.models import MultivariateLinearModel
+from LinearRegression.models import RidgeRegression
+from LinearRegression.models import LassoRegression
+from LinearRegression.preprocessing import FeatureNormalizer
+from LinearRegression.preprocessing import trainTestSplitData
 
 st.set_page_config(
     page_title="Linear Regression Models",
