@@ -6,11 +6,11 @@ from LinearRegression.preprocessing.Normalization import FeatureNormalizer
 
 class MultivariateLinearModel(BaseModel):
 
-    def __init__(self, learning_rate=0.01, max_iterations=1000, normalize=True):
+    def __init__(self, learningRate=0.01, maxIterations=1000, normalize=True):
         super().__init__()
         self.optimizer = GradientDescent(
-            learningRate=learning_rate, 
-            maxIterations=max_iterations,
+            learningRate=learningRate, 
+            maxIterations=maxIterations,
             tolerance=1e-8,  # Use a smaller tolerance for better convergence
             verbose=False
         )
@@ -48,18 +48,8 @@ class MultivariateLinearModel(BaseModel):
         self.weights = np.random.randn(X_normalized.shape[1]) * 0.01
         self.bias = 0.0
         
-        # Gradient descent for specified iterations
-        self.bias, self.weights, costHistory = self.optimizer.optimize(X_normalized, y, self.bias, self.weights)
-        
-        if verbose:
-            print(f"Model trained with coefficients: {self.weights} and intercept: {self.bias}")
-            print(f"Initial cost: {costHistory[0]}")
-            print(f"Final cost: {costHistory[-1]}")
-            
-            # Print cost improvement
-            cost_improvement = (costHistory[0] - costHistory[-1]) / costHistory[0] * 100
-            print(f"Cost improvement: {cost_improvement:.2f}%")
-
+        self.bias, self.weights, self.costHistory = self.optimizer.optimize(X_normalized, y, self.bias, self.weights)
+        self.isFitted = True
         return self
     
     def predict(self, X):
@@ -79,7 +69,6 @@ class MultivariateLinearModel(BaseModel):
         
         isPandas = isinstance(X, pd.DataFrame) or isinstance(X, pd.Series)
         
-        # Store shape and index information before validation
         if isPandas:
             originalIndex = X.index
         
@@ -88,74 +77,14 @@ class MultivariateLinearModel(BaseModel):
         if self.normalize and self.normalizer is not None:
             X = self.normalizer.transform(X)
         
-        # Make predictions    
         predictions = np.dot(X, self.weights) + self.bias
-        
-        # Ensure predictions is a 1D array
         predictions = predictions.flatten()
         
-        # Return as pandas Series if input was pandas
         if isPandas:
             # Make sure the index has the same length as predictions
             if len(originalIndex) != len(predictions):
-                # If lengths don't match, create a new index of appropriate length
                 return pd.Series(predictions)
             else:
                 return pd.Series(predictions, index=originalIndex)
         
         return predictions
-        
-    def score(self, X, y):
-        """
-        Calculate the R² score for the model.
-        
-        Parameters:
-        -----------
-        X: Array of test data
-        y: Array of target values
-        
-        Returns:
-        --------
-        score: The R² score
-        """
-        # Convert to numpy arrays if needed
-        if isinstance(y, pd.DataFrame) or isinstance(y, pd.Series):
-            y = y.values
-        else:
-            y = np.array(y)
-            
-        # Get predictions using the predict method
-        predictions = self.predict(X)
-        
-        # Convert predictions to numpy array if it's a pandas Series
-        if isinstance(predictions, pd.DataFrame) or isinstance(predictions, pd.Series):
-            predictions = predictions.values
-        else:
-            predictions = np.array(predictions)
-            
-        # Make sure both are 1D arrays
-        y = y.flatten()
-        predictions = predictions.flatten()
-        
-        # Ensure lengths match
-        if len(y) != len(predictions):
-            # Adjust predictions to match y length
-            if len(y) < len(predictions):
-                predictions = predictions[:len(y)]
-            else:
-                # This shouldn't happen, but just in case
-                raise ValueError(f"Predictions length ({len(predictions)}) is less than y length ({len(y)})")
-        
-        # Calculate R² score
-        y_mean = np.mean(y)
-        ss_res = np.sum((y - predictions) ** 2)
-        ss_tot = np.sum((y - y_mean) ** 2)
-        
-        if ss_tot == 0:
-            return 0.0
-            
-        r2 = 1 - (ss_res / ss_tot)
-        
-        # R² sometimes can be negative if the model is worse than predicting the mean
-        # In practice, it's usually capped at 0
-        return max(0.0, r2) if not np.isnan(r2) else 0.0

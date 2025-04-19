@@ -81,7 +81,6 @@ class BaseModel(ABC):
         else:
             predictions = np.array(predictions)
             
-        # Make sure both y and predictions are 1D arrays
         y = y.flatten()
         predictions = predictions.flatten()
 
@@ -112,16 +111,10 @@ class BaseModel(ABC):
         --------
         score: float, adjusted R^2 score
         """
-        # Get the R^2 score
         r2 = self.score(X, y)
-        
-        # Number of samples
         n = X.shape[0]
-        
-        # Number of features
         p = X.shape[1]
         
-        # Calculate the adjusted R^2
         adjusted_r2 = 1 - (1 - r2) * (n - 1) / (n - p - 1)
         
         return adjusted_r2
@@ -142,24 +135,21 @@ class BaseModel(ABC):
         """
         print(f"Starting {k}-fold cross-validation...")
         
-        # Convert to numpy arrays if pandas objects
         is_pandas_X = isinstance(X, pd.DataFrame) or isinstance(X, pd.Series)
         is_pandas_y = isinstance(y, pd.DataFrame) or isinstance(y, pd.Series)
         
         X_copy, y_copy = self.validateData(X, y)
         
         n = X_copy.shape[0]
-        print(f"Total samples for cross-validation: {n}")
         
         # Create random indices for shuffling
         indices = np.random.permutation(n)
         
-        fold_size = n // k
-        fold_indices = [indices[i * fold_size:(i + 1) * fold_size] for i in range(k)]
+        foldSize = n // k
+        foldIndices = [indices[i * foldSize:(i + 1) * foldSize] for i in range(k)]
         
-        # If n is not divisible by k, add the remaining indices to the last fold
         if n % k != 0:
-            fold_indices[-1] = np.concatenate([fold_indices[-1], indices[k * fold_size:]])
+            foldIndices[-1] = np.concatenate([foldIndices[-1], indices[k * foldSize:]])
         
         scores = []
         prevWeights = None
@@ -167,51 +157,45 @@ class BaseModel(ABC):
         
         for i in range(k):
             
-            # Get test indices for this fold
-            test_idx = fold_indices[i]
-            
-            # Get training indices (all indices not in test_idx)
-            train_idx = np.concatenate([fold_indices[j] for j in range(k) if j != i])
+            testIndex = foldIndices[i]            
+            trainIndex = np.concatenate([foldIndices[j] for j in range(k) if j != i])
             
             
             if is_pandas_X:
-                X_train = X.iloc[train_idx] if isinstance(X, pd.DataFrame) else X.loc[train_idx]
-                X_test = X.iloc[test_idx] if isinstance(X, pd.DataFrame) else X.loc[test_idx]
+                X_train = X.iloc[trainIndex] if isinstance(X, pd.DataFrame) else X.loc[trainIndex]
+                X_test = X.iloc[testIndex] if isinstance(X, pd.DataFrame) else X.loc[testIndex]
             else:
-                X_train = X_copy[train_idx]
-                X_test = X_copy[test_idx]
+                X_train = X_copy[trainIndex]
+                X_test = X_copy[testIndex]
                 
             if is_pandas_y:
-                y_train = y.iloc[train_idx] if isinstance(y, pd.DataFrame) else y.loc[train_idx]
-                y_test = y.iloc[test_idx] if isinstance(y, pd.DataFrame) else y.loc[test_idx]
+                y_train = y.iloc[trainIndex] if isinstance(y, pd.DataFrame) else y.loc[trainIndex]
+                y_test = y.iloc[testIndex] if isinstance(y, pd.DataFrame) else y.loc[testIndex]
             else:
-                y_train = y_copy[train_idx]
-                y_test = y_copy[test_idx]
+                y_train = y_copy[trainIndex]
+                y_test = y_copy[testIndex]
             
             # Create a new instance of the same model class
             if hasattr(self, 'optimizer') and hasattr(self, 'normalize'):
-                # For MultipleLinearModel
-                model_copy = self.__class__(
+                modelCopy = self.__class__(
                     max_iterations=self.optimizer.getMaxIterations() if hasattr(self.optimizer, 'getMaxIterations') else 1000,
                     normalize=self.normalize
                 )
             else:
-                # Generic fallback
-                model_copy = self.__class__()
+                modelCopy = self.__class__()
             
             if prevWeights is not None and prevBias is not None:
-                model_copy.setParams(weights=prevWeights, bias=prevBias)
+                modelCopy.setParams(weights=prevWeights, bias=prevBias)
 
 
-            model_copy.fit(X_train, y_train, verbose=False)
-            prevWeights = model_copy.getWeights()
-            prevBias = model_copy.getBias()
+            modelCopy.fit(X_train, y_train)
+            prevWeights = modelCopy.getWeights()
+            prevBias = modelCopy.getBias()
             
-            score = model_copy.score(X_test, y_test)
+            score = modelCopy.score(X_test, y_test)
 
             scores.append(score)
         
-        print(f"Cross-validation complete. Mean R² score: {np.mean(scores):.4f}")
         return scores
     
     def validateData(self, X, y=None):
@@ -236,13 +220,11 @@ class BaseModel(ABC):
         X: Numpy array of training data
         y: Numpy array of target values (if provided) 
         """
-        # Convert DataFrame or Series to numpy
         if isinstance(X, pd.DataFrame) or isinstance(X, pd.Series):
             X = X.values
         else:
             X = np.array(X)
 
-        # Ensure X is 2D
         if len(X.shape) == 1:
             X = X.reshape(-1, 1)
 
@@ -252,14 +234,11 @@ class BaseModel(ABC):
             else:
                 y = np.array(y)
                 
-            # Ensure y is 1D
             y = y.flatten()
 
-            # Check that X and y have the same number of samples
             if X.shape[0] != y.shape[0]:
                 raise ValueError(f"X and y must have the same number of samples, got {X.shape[0]} and {y.shape[0]}.")
 
-        # Check for missing or infinite values
         if not np.issubdtype(X.dtype, np.number):
             raise TypeError("X contains non-numeric data, which is not supported")
         
@@ -277,15 +256,3 @@ class BaseModel(ABC):
                 raise ValueError("y contains infinite values")
 
         return X, y if y is not None else None
-    
-    
-        """
-        Set the parameters of the model.
-
-        Parameters:
-        -----------
-        params: Dictionary of model parameters
-        """
-        self.weights = params.get("coefficients", self.weights)
-        self.bias = params.get("intercept", self.bias)
-        self.isFitted = params.get("isFitted", self.isFitted)

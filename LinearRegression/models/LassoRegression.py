@@ -6,7 +6,7 @@ from LinearRegression.optimizers.CoordinateDescent import CoordinateDescent
 class LassoRegression(MultivariateLinearModel):
 
     def __init__(self, learning_rate=0.01, max_iterations=1000, normalize=True, verbose=False, lambda_=1.0):
-        super().__init__(learning_rate=learning_rate, max_iterations=max_iterations, normalize=normalize)
+        super().__init__(learningRate=learning_rate, maxIterations=max_iterations, normalize=normalize)
         self.lambda_ = lambda_
         self.verbose = verbose
         self.optimizer = CoordinateDescent(
@@ -53,19 +53,22 @@ class LassoRegression(MultivariateLinearModel):
         self.bias = 0.0
         
         # Track cost history
-        cost_history = []
+        costHistory = []
         
         # Number of samples and features
         m_samples = X_normalized.shape[0]
         n_features = X_normalized.shape[1]
 
-        self.weights, self.bias, cost_history = self.optimizer.optimize(X_normalized, y)
+        self.weights, self.bias, costHistory = self.optimizer.optimize(X_normalized, y)
         
         if self.verbose:
             print(f"Model trained with coefficients: {self.weights} and intercept: {self.bias}")
-            print(f"Initial cost: {cost_history[0]}")
-            print(f"Final cost: {cost_history[-1]}")
+            print(f"Initial cost: {costHistory[0]}")
+            print(f"Final cost: {costHistory[-1]}")
 
+
+        self.isFitted = True
+        self.costHistory = costHistory
         return self
     
     def predict(self, X):
