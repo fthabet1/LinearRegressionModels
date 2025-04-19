@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-from LinearRegression.models.MultivariateLinearModel import MultivariateLinearModel
-from LinearRegression.optimizers.GradientDescent import GradientDescent
+from .MultivariateLinearModel import MultivariateLinearModel
+from ..optimizers.GradientDescent import GradientDescent
 
 class RidgeRegression(MultivariateLinearModel):
 
