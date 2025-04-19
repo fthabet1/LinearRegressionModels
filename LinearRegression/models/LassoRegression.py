@@ -1,5 +1,11 @@
 import pandas as pd
 import numpy as np
+import sys
+import os
+
+# Add root to path to enable absolute imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 from LinearRegression.models.MultivariateLinearModel import MultivariateLinearModel
 from LinearRegression.optimizers.CoordinateDescent import CoordinateDescent
 

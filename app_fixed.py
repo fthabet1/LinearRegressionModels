@@ -8,15 +8,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Add the project root directory to sys.path to import modules
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+root_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, root_dir)
 
-# Direct imports from the LinearRegression package
-from LinearRegression import UnivariateLinearModel
-from LinearRegression import MultivariateLinearModel
-from LinearRegression import RidgeRegression
-from LinearRegression import LassoRegression
-from LinearRegression import FeatureNormalizer
-from LinearRegression import trainTestSplitData
+# Import with modified paths - instead of complex imports, use simple imports here
+sys.path.insert(0, os.path.join(root_dir, 'LinearRegression'))
+from models.BaseModel import BaseModel
+from models.UnivariateLinearModel import UnivariateLinearModel
+from models.MultivariateLinearModel import MultivariateLinearModel
+from models.RidgeRegression import RidgeRegression
+from models.LassoRegression import LassoRegression
+from preprocessing.Normalization import FeatureNormalizer
+from preprocessing.DataSplitter import trainTestSplitData
 
 st.set_page_config(
     page_title="Linear Regression Models",
@@ -183,8 +186,8 @@ with st.sidebar:
                     )
                 elif modelType == 'lasso':
                     model = LassoRegression(
-                        learningRate=learningRate,
-                        maxIterations=maxIterations,
+                        learning_rate=learningRate,
+                        max_iterations=maxIterations,
                         lambda_=lambdaParam
                     )
                 
@@ -330,4 +333,4 @@ else:
     4. **Lasso Regression**: Linear regression with L1 regularization
     
     Choose a dataset and model type from the sidebar to get started.
-    """)
+    """) 

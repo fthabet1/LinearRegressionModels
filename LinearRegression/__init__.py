@@ -1,1 +1,14 @@
-# LinearRegression package 
+# LinearRegression package
+
+# Import these directly so users can import from top level
+from LinearRegression.models.BaseModel import BaseModel
+from LinearRegression.models.UnivariateLinearModel import UnivariateLinearModel
+from LinearRegression.models.MultivariateLinearModel import MultivariateLinearModel
+from LinearRegression.models.RidgeRegression import RidgeRegression
+from LinearRegression.models.LassoRegression import LassoRegression
+
+from LinearRegression.preprocessing.Normalization import FeatureNormalizer
+from LinearRegression.preprocessing.DataSplitter import trainTestSplitData, kFoldCrossValidation
+
+from LinearRegression.optimizers.GradientDescent import GradientDescent
+from LinearRegression.optimizers.CoordinateDescent import CoordinateDescent 
