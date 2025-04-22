@@ -6,7 +6,7 @@ import os
 # Add root to path to enable absolute imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from .BaseModel import BaseModel
+from LinearRegression.models.BaseModel import BaseModel
 from LinearRegression.optimizers.GradientDescent import GradientDescent
 from LinearRegression.preprocessing.Normalization import FeatureNormalizer
 

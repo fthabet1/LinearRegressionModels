@@ -11,12 +11,12 @@ from LinearRegression.optimizers.CoordinateDescent import CoordinateDescent
 
 class LassoRegression(MultivariateLinearModel):
 
-    def __init__(self, learning_rate=0.01, max_iterations=1000, normalize=True, verbose=False, lambda_=1.0):
-        super().__init__(learningRate=learning_rate, maxIterations=max_iterations, normalize=normalize)
+    def __init__(self, learningRate=0.01, maxIterations=1000, normalize=True, verbose=False, lambda_=1.0):
+        super().__init__(learningRate=learningRate, maxIterations=maxIterations, normalize=normalize)
         self.lambda_ = lambda_
         self.verbose = verbose
         self.optimizer = CoordinateDescent(
-            maxIterations=max_iterations,
+            maxIterations=maxIterations,
             lambda_=self.lambda_,
             tolerance=1e-8,
             verbose=verbose

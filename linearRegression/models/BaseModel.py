@@ -155,3 +155,66 @@ class BaseModel(ABC):
                 raise ValueError("y contains infinite values")
 
         return X, y if y is not None else None 
+    
+    def crossValidation(self, X, y, k=5):
+        """
+        Perform k-fold cross-validation on the model.
+ 
+        Parameters:
+        -----------
+        X: Array or DataFrame of data (N x M array of N samples and M features)
+        y: Array or Series of target values (N samples)
+        k: Number of folds
+
+        Returns:
+        --------
+        scores: Array of R^2 scores for each fold
+        """
+ 
+
+        isPandasX = isinstance(X, pd.DataFrame) or isinstance(X, pd.Series)
+        isPandasY = isinstance(y, pd.DataFrame) or isinstance(y, pd.Series)
+
+        X_copy, y_copy = self.validateData(X, y)
+ 
+        n = X_copy.shape[0]
+
+        indices = np.random.permutation(n)
+        foldSize = n // k
+        foldIndices = [indices[i * foldSize:(i + 1) * foldSize] for i in range(k)]
+
+        if n % k != 0:
+            foldIndices[-1] = np.concatenate([foldIndices[-1], indices[k * foldSize:]])
+ 
+        scores = []
+
+        for i in range(k):
+            testIndex = foldIndices[i]
+            trainIndex = np.concatenate([foldIndices[j] for j in range(k) if j != i])
+
+            if isPandasX:
+                X_train = X.iloc[trainIndex] if isinstance(X, pd.DataFrame) else X.loc[trainIndex]
+                X_test = X.iloc[testIndex] if isinstance(X, pd.DataFrame) else X.loc[testIndex]
+            else:
+                X_train = X_copy[trainIndex]
+                X_test = X_copy[testIndex]
+            if isPandasY:
+                y_train = y.iloc[trainIndex] if isinstance(y, pd.DataFrame) else y.loc[trainIndex]
+                y_test = y.iloc[testIndex] if isinstance(y, pd.DataFrame) else y.loc[testIndex]
+            else:
+                y_train = y_copy[trainIndex]
+                y_test = y_copy[testIndex]
+ 
+            if hasattr(self, 'optimizer') and hasattr(self, 'normalize'):
+                modelCopy = self.__class__(
+                    learningRate=self.optimizer.getLearningRate() if hasattr(self.optimizer, 'getLearningRate') else 0.01,
+                    maxIterations=self.optimizer.getMaxIterations() if hasattr(self.optimizer, 'getMaxIterations') else 1000,
+                    normalize=self.normalize
+                )
+            else:
+                modelCopy = self.__class__()
+ 
+            modelCopy.fit(X_train, y_train)
+            score = modelCopy.score(X_test, y_test)
+            scores.append(score) 
+        return scores

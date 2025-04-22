@@ -8,6 +8,7 @@ from LinearRegression.preprocessing.DataSplitter import trainTestSplitData
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt 
+from sklearn.linear_model import LinearRegression
 
 studentData = loadDatasetFromCSV("../datasets/multivariateStudentData.csv")
 housingData = loadDatasetFromCSV("../datasets/multivariateHousingData.csv")
@@ -40,9 +41,14 @@ for i in range(len(datasets)):
         maxIterations=5000,
         normalize=True
     )
+
+    comparisonModel = LinearRegression()
     
-    scores = model.crossValidation(X, y, k=k_folds)
+    
     X_train, X_test, y_train, y_test = trainTestSplitData(dataset, targetCol)
+
+    comparisonModel.fit(X_train, y_train)
+    comparisonModelScore = comparisonModel.score(X_test, y_test)
 
     model.fit(X_train, y_train, verbose=False)
     trainScore = model.score(X_train, y_train)
@@ -50,6 +56,7 @@ for i in range(len(datasets)):
     
     print(f"Model R^2 score on training data: {trainScore:.4f}")
     print(f"Model R^2 score on test data: {testScore:.4f}")
+    print(f"Scikit-Learn Model R^2 score: {comparisonModelScore:.4f}")
 
     
     print("---------------------------------------------------------")

@@ -9,6 +9,7 @@ from LinearRegression.preprocessing.Normalization import FeatureNormalizer
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt 
+from sklearn.linear_model import Lasso
 
 studentData = loadDatasetFromCSV("../datasets/multivariateStudentData.csv")
 housingData = loadDatasetFromCSV("../datasets/multivariateHousingData.csv")
@@ -50,16 +51,21 @@ for i in range(len(datasets)):
     bestCV_score = float('-inf')
 
     model = LassoRegression(
-        max_iterations=maxIterations,
+        maxIterations=maxIterations,
         normalize=True
     )
+
+    comparisonModel = Lasso()
+
+    X_train, X_test, y_train, y_test = trainTestSplitData(dataset, targetCol)
+
     
     for lambda_ in lambda_values:
         print(f"\nTrying lambda = {lambda_}")
         
         model.setLambda(lambda_)
-        
-        score = model.crossValidation(X, y_normalized, k=k_folds)
+        y_train_normalized = y_normalizer.fitTransform(y_train.values.reshape(-1, 1)).flatten()
+        score = model.crossValidation(X_train, y_train_normalized, k=k_folds)
         meanCV_score = np.mean(score)
         
         print(f"Mean CV R² score: {meanCV_score:.4f}")
@@ -74,7 +80,6 @@ for i in range(len(datasets)):
     print(f"\n2. TEST SET RESULTS")
     print(f"{'-'*30}")
     
-    X_train, X_test, y_train, y_test = trainTestSplitData(dataset, targetCol)
     print(f"Train set size: {X_train.shape[0]} samples")
     print(f"Test set size: {X_test.shape[0]} samples")
 
@@ -84,12 +89,14 @@ for i in range(len(datasets)):
     
     model.setLambda(bestLambda)
     model.fit(X_train, yTrainNormalized, verbose=False)
+    comparisonModel.fit(X_train, yTrainNormalized)
 
     trainScore = model.score(X_train, yTrainNormalized)
     testScore = model.score(X_test, yTestNormalized)
+    comparisonModelScore = comparisonModel.score(X_test, yTestNormalized)
     
     print(f"Model R^2 score on training data: {trainScore:.4f}")
     print(f"Model R^2 score on test data: {testScore:.4f}")
+    print(f"Scikit-Learn Model R^2 score: {comparisonModelScore:.4f}")
 
-    
     print("---------------------------------------------------------")
