@@ -1,3 +1,4 @@
+screenshots/
 LinearRegression/models/__pycache__/SimpleLinear.cpython-312.pyc
 LinearRegression/models/__pycache__/MultipleLinear.cpython-312.pyc
 LinearRegression/models/__pycache__/BaseModel.cpython-312.pyc
@@ -11,4 +12,3 @@ LinearRegression/models/__pycache__/LassoRegression.cpython-312.pyc
 LinearRegression/models/__pycache__/MultivariateLinearModel.cpython-312.pyc
 LinearRegression/models/__pycache__/UnivariateLinearModel.cpython-312.pyc
 LinearRegression/models/__pycache__/RidgeRegression.cpython-312.pyc
-screenshots/*
